@@ -103,9 +103,9 @@ public class EnemyController : MonoBehaviour
             Destroy(gameObject);
 
             // 调用经验等级控制器的SpawnExp方法，在当前物体的位置生成经验拾取物
-            // ExperienceLevelController.Instance → 经验控制器的单例实例
-            // transform.position → 当前物体（如被击败的敌人）的世界坐标（作为拾取物生成位置）
-            ExperienceLevelController.Instance.SpawnExp(transform.position,expToGive);
+            // 参数1：经验值生成位置（当前敌人的世界坐标）
+            // 参数2：要生成的经验值（使用上面配置的expToGive）
+            ExperienceLevelController.Instance.SpawnExp(transform.position, expToGive);
         }
 
         // 调用伤害数字控制器的单例实例，生成伤害数字

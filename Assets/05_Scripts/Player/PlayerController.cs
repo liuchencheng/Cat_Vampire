@@ -5,6 +5,23 @@ using UnityEngine;
 //玩家运动脚本
 public class PlayerController : MonoBehaviour
 {
+    // 单例实例（全局唯一，供外部脚本调用）
+    public static PlayerController Instance;
+
+    /// 初始化单例（在Start之前执行）
+    private void Awake()
+    {
+        // 确保场景中只有一个经验控制器实例
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+        else
+        {
+            Destroy(gameObject); // 重复实例直接销毁
+        }
+    }
+
     public Animator player;
     [Header("玩家移动速度")]
     public float moveSpeed = 0.5f; // 公开的速度变量，方便在 Inspector 中调整
@@ -13,6 +30,13 @@ public class PlayerController : MonoBehaviour
 
     [Header("经验水晶靠近多少距离会被吸走")]
     public float pickupRange = 0.5f;
+
+    /// <summary>
+    /// 激活的武器
+    /// 用于指向玩家当前正在使用的武器实例，方便访问其属性和调用方法
+    /// </summary>
+    [Header("激活的武器")]
+    public Weapon activeWeapon;
 
     void Update()
     {

@@ -12,7 +12,7 @@ public class WeaponHarm : MonoBehaviour
     [Tooltip("单次碰撞造成的伤害值")]
     public float damageAmount;
 
-    [Tooltip("销毁武器的时间")]
+    [Tooltip("武器持续的时间")]
     public float lifeTime = 3f;
 
     [Tooltip("控制物体变大/变小的快慢，越小越慢")]

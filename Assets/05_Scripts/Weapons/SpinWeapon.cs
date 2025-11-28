@@ -3,60 +3,98 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// æ­¦å™¨ç¯ç»•æ—‹è½¬å‘å°„è„šæœ¬
-/// åŠŸèƒ½ï¼šæ§åˆ¶æŒ‡å®šçš„è½½ä½“ï¼ˆHolderï¼‰æ²¿Zè½´æŒç»­æ—‹è½¬ï¼Œå¸¦åŠ¨æ­¦å™¨ï¼ˆé¢„åˆ¶ä½“ï¼‰ä¸€èµ·æ—‹è½¬
-/// æ ¸å¿ƒé€»è¾‘ï¼šé€šè¿‡è®¡æ—¶å™¨é—´éš”ç”Ÿæˆå­å¼¹ï¼ˆé¢„åˆ¶ä½“ Orbital_Boltï¼‰
+/// ÎäÆ÷»·ÈÆĞı×ª·¢Éä½Å±¾
+/// ¹¦ÄÜ£º¿ØÖÆÖ¸¶¨µÄÔØÌå£¨Holder£©ÑØZÖá³ÖĞøĞı×ª£¬´ø¶¯ÎäÆ÷£¨Ô¤ÖÆÌå£©Ò»ÆğĞı×ª
+/// ºËĞÄÂß¼­£ºÍ¨¹ı¼ÆÊ±Æ÷¼ä¸ôÉú³É×Óµ¯£¨Ô¤ÖÆÌå Orbital_Bolt£©
 /// </summary>
-public class SpinWeapon : MonoBehaviour
+public class SpinWeapon : Weapon
 {
-    [Tooltip("æ—‹è½¬é€Ÿåº¦ï¼ˆå•ä½ï¼šåº¦/ç§’ï¼‰")]
+    [Tooltip("Ğı×ªËÙ¶È£¨µ¥Î»£º¶È/Ãë£©")]
     public float rotateSpeed = 150f;
 
-    [Tooltip("è¦æ—‹è½¬çš„ç›®æ ‡è½½ä½“")]
+    [Tooltip("ÒªĞı×ªµÄÄ¿±êÔØÌå")]
     public Transform holder;
 
-    [Tooltip("æ­¦å™¨é¢„åˆ¶ä½“")]
+    [Tooltip("ÎäÆ÷Ô¤ÖÆÌå")]
     public Transform weapon;
-    [Tooltip("å­å¼¹ç”Ÿæˆçš„é—´éš”æ—¶é—´ï¼ˆå•ä½ï¼šç§’ï¼‰")]
+    [Tooltip("×Óµ¯Éú³ÉµÄ¼ä¸ôÊ±¼ä£¨µ¥Î»£ºÃë£©")]
     public float timeBetweenSpawn = 4f;
     /// <summary>
-    /// ç”Ÿæˆè®¡æ—¶å™¨ï¼ˆç§æœ‰å˜é‡ï¼Œä»…è„šæœ¬å†…éƒ¨ä½¿ç”¨ï¼‰
-    /// ç”¨äºè®°å½•é—´éš”æ—¶é—´ï¼Œåˆ¤æ–­æ˜¯å¦è¾¾åˆ°ç”Ÿæˆå­å¼¹çš„æ—¶æœº
+    /// Éú³É¼ÆÊ±Æ÷£¨Ë½ÓĞ±äÁ¿£¬½ö½Å±¾ÄÚ²¿Ê¹ÓÃ£©
+    /// ÓÃÓÚ¼ÇÂ¼¼ä¸ôÊ±¼ä£¬ÅĞ¶ÏÊÇ·ñ´ïµ½Éú³É×Óµ¯µÄÊ±»ú
     /// </summary>
     private float spawnCounter;
 
+    // ÎäÆ÷×é¼şÒıÓÃ
+    public WeaponHarm damager;
+
     void Start()
     {
-
+        SetStats();
     }
 
     void Update()
     {
-        // 1. è·å–holderå½“å‰çš„Zè½´æ—‹è½¬è§’åº¦ï¼ˆåŸºäºä¸–ç•Œåæ ‡ç³»ï¼‰
-        // 2. è®¡ç®—å½“å‰å¸§åº”å¢åŠ çš„æ—‹è½¬è§’åº¦ï¼ˆrotateSpeedï¼šåº¦/ç§’ Ã— Time.deltaTimeï¼šå½“å‰å¸§è€—æ—¶ï¼‰
-        //    ç¡®ä¿æ—‹è½¬é€Ÿåº¦ç¨³å®šï¼Œæ¯ç§’æ—‹è½¬è§’åº¦å›ºå®šä¸ºrotateSpeed
-        // 3. é€šè¿‡Quaternion.Eulerå°†X/Y/Zè½´æ—‹è½¬è§’åº¦è½¬ä¸ºå››å…ƒæ•°ï¼ˆé¿å…ä¸‡å‘é”é—®é¢˜ï¼‰
-        //    å…¶ä¸­X/Yè½´ä¿æŒ0åº¦ä¸æ—‹è½¬ï¼Œä»…ä¿®æ”¹Zè½´è§’åº¦
-        // 4. å°†è®¡ç®—åçš„æ—‹è½¬è§’åº¦èµ‹å€¼ç»™holderï¼Œå®ç°å®é™…æ—‹è½¬
-        holder.rotation = Quaternion.Euler(
-            0f,                          // Xè½´æ—‹è½¬è§’åº¦ï¼šå›ºå®š0åº¦ï¼Œä¸æ—‹è½¬
-            0f,                          // Yè½´æ—‹è½¬è§’åº¦ï¼šå›ºå®š0åº¦ï¼Œä¸æ—‹è½¬
-            holder.rotation.eulerAngles.z + (rotateSpeed * Time.deltaTime)  // Zè½´ç´¯åŠ æ—‹è½¬è§’åº¦
-        );
+        // 1. »ñÈ¡holderµ±Ç°µÄZÖáĞı×ª½Ç¶È£¨»ùÓÚÊÀ½ç×ø±êÏµ£©
+        // 2. ¼ÆËãµ±Ç°Ö¡Ó¦Ôö¼ÓµÄĞı×ª½Ç¶È£¨rotateSpeed£º¶È/Ãë ¡Á Time.deltaTime£ºµ±Ç°Ö¡ºÄÊ±£©
+        //    È·±£Ğı×ªËÙ¶ÈÎÈ¶¨£¬Ã¿ÃëĞı×ª½Ç¶È¹Ì¶¨ÎªrotateSpeed
+        // 3. Í¨¹ıQuaternion.Euler½«X/Y/ZÖáĞı×ª½Ç¶È×ªÎªËÄÔªÊı£¨±ÜÃâÍòÏòËøÎÊÌâ£©
+        //    ÆäÖĞX/YÖá±£³Ö0¶È²»Ğı×ª£¬½öĞŞ¸ÄZÖá½Ç¶È
+        // 4. ½«¼ÆËãºóµÄĞı×ª½Ç¶È¸³Öµ¸øholder£¬ÊµÏÖÊµ¼ÊĞı×ª
+        /*holder.rotation = Quaternion.Euler(
+            0f,                          // XÖáĞı×ª½Ç¶È£º¹Ì¶¨0¶È£¬²»Ğı×ª
+            0f,                          // YÖáĞı×ª½Ç¶È£º¹Ì¶¨0¶È£¬²»Ğı×ª
+            holder.rotation.eulerAngles.z + (rotateSpeed * Time.deltaTime)  // ZÖáÀÛ¼ÓĞı×ª½Ç¶È
+        );*/
 
-        // å­å¼¹ç”Ÿæˆçš„è®¡æ—¶é€»è¾‘
-        spawnCounter -= Time.deltaTime;  // è®¡æ—¶å™¨æ—¶é—´é€’å‡
-        if (spawnCounter <= 0)  // å½“è®¡æ—¶å™¨â‰¤0æ—¶ï¼Œè§¦å‘å­å¼¹ç”Ÿæˆ
+        // ¼ÆËãĞÂµÄZÖáĞı×ª½Ç¶È£º
+        // »ùÓÚµ±Ç°Ğı×ª½Ç¶È + £¨Ğı×ªËÙ¶È * Ö¡¼ä¸ôÊ±¼ä * µ±Ç°µÈ¼¶µÄËÙ¶ÈÊôĞÔ£©
+        // ×÷ÓÃ£ºÎäÆ÷µÈ¼¶ÌáÉıºó£¬Ğı×ªËÙ¶È»áËæstats[weaponLevel].speedÔö¼Ó¶ø¼Ó¿ì
+        holder.rotation = Quaternion.Euler(0f, 0f,
+            holder.rotation.eulerAngles.z + (rotateSpeed * Time.deltaTime * stats[weaponLevel].speed));
+
+        // ×Óµ¯Éú³ÉµÄ¼ÆÊ±Âß¼­
+        spawnCounter -= Time.deltaTime;  // ¼ÆÊ±Æ÷Ê±¼äµİ¼õ
+        if (spawnCounter <= 0)  // µ±¼ÆÊ±Æ÷¡Ü0Ê±£¬´¥·¢×Óµ¯Éú³É
         {
-            spawnCounter = timeBetweenSpawn;  // é‡ç½®è®¡æ—¶å™¨ï¼Œå‡†å¤‡ä¸‹ä¸€æ¬¡ç”Ÿæˆ
+            spawnCounter = timeBetweenSpawn;  // ÖØÖÃ¼ÆÊ±Æ÷£¬×¼±¸ÏÂÒ»´ÎÉú³É
 
-            // ç”Ÿæˆå­å¼¹é€»è¾‘ï¼š
-            // - é¢„åˆ¶ä½“ï¼šä½¿ç”¨æŒ‡å®šçš„weaponé¢„åˆ¶ä½“
-            // - ç”Ÿæˆä½ç½®ï¼šä¸weaponé¢„åˆ¶ä½“çš„ä½ç½®ä¿æŒä¸€è‡´
-            // - ç”Ÿæˆæ—‹è½¬ï¼šä¸weaponé¢„åˆ¶ä½“çš„æ—‹è½¬ä¿æŒä¸€è‡´
-            // - çˆ¶ç‰©ä½“ï¼šå°†ç”Ÿæˆçš„å­å¼¹æŒ‚è½½åˆ°holderä¸‹ï¼Œè·Ÿéšholderä¸€èµ·æ—‹è½¬
-            // - æ¿€æ´»ç‰©ä½“ï¼šç”Ÿæˆåç«‹å³æ¿€æ´»ï¼ˆSetActive(true)ï¼‰
+            // Éú³É×Óµ¯Âß¼­£º
+            // - Ô¤ÖÆÌå£ºÊ¹ÓÃÖ¸¶¨µÄweaponÔ¤ÖÆÌå
+            // - Éú³ÉÎ»ÖÃ£ºÓëweaponÔ¤ÖÆÌåµÄÎ»ÖÃ±£³ÖÒ»ÖÂ
+            // - Éú³ÉĞı×ª£ºÓëweaponÔ¤ÖÆÌåµÄĞı×ª±£³ÖÒ»ÖÂ
+            // - ¸¸ÎïÌå£º½«Éú³ÉµÄ×Óµ¯¹ÒÔØµ½holderÏÂ£¬¸úËæholderÒ»ÆğĞı×ª
+            // - ¼¤»îÎïÌå£ºÉú³ÉºóÁ¢¼´¼¤»î£¨SetActive(true)£©
             Instantiate(weapon, weapon.position, weapon.rotation, holder).gameObject.SetActive(true);
         }
+
+        //Éı¼¶µÄÊ±ºòÔöÇ¿ÎäÆ÷
+        if (statsUpdated == true)
+        {
+            statsUpdated = false; // ÖØÖÃÉı¼¶±ê¼Ç
+            SetStats(); // µ÷ÓÃÊôĞÔÉèÖÃ·½·¨£¬Ë¢ĞÂÎäÆ÷µ±Ç°µÈ¼¶µÄÊôĞÔ
+        }
+    }
+
+    /// <summary>
+    /// ¸ù¾İµ±Ç°ÎäÆ÷µÈ¼¶¸üĞÂËùÓĞÏà¹ØÊôĞÔ
+    /// Í¨³£ÔÚÎäÆ÷Éı¼¶ºó»ò³õÊ¼»¯Ê±µ÷ÓÃ
+    /// </summary>
+    public void SetStats()
+    {
+        // 1. ÉèÖÃÉËº¦Æ÷µÄÉËº¦Öµ = ÎäÆ÷µ¥´Î¹¥»÷ÉËº¦
+        damager.damageAmount = stats[weaponLevel].damage;
+
+        // 2. ÉèÖÃÎäÆ÷Ëõ·Å£¨·¶Î§¿ÉÊÓ»¯£©= µ±Ç°ÎäÆ÷µÄ·¶Î§ÊôĞÔ£¨ÒÔ1±¶»ù´¡Ëõ·ÅÎª»ù×¼£©
+        transform.localScale = Vector3.one * stats[weaponLevel].range;
+
+        // 3. ÉèÖÃ¹¥»÷¼ä¸ôÊ±¼ä = µ±Ç°ÎäÆ÷µÄ¹¥»÷¼ä¸ôÊôĞÔ
+        timeBetweenSpawn = stats[weaponLevel].timeBetweenAttacks;
+
+        // 4. ÉèÖÃÎäÆ÷µÄ³ÖĞøÊ±¼ä= µ±Ç°ÎäÆ÷µÄ³ÖĞøÊ±¼äÊôĞÔ
+        damager.lifeTime = stats[weaponLevel].duration;
+
+        // 5. ÖØÖÃÉú³É¼ÆÊıÆ÷£¨Èç¹¥»÷ÀäÈ´¼ÆÊ±Æ÷£©
+        spawnCounter = 0f;
     }
 }
