@@ -64,22 +64,31 @@ public class EnemyController : MonoBehaviour
     /// </summary>
     void Update()
     {
-        // 处理击退逻辑（计时器>0时执行）
-        HandleKnockback();
-
-        // 仅当目标（玩家）和刚体组件都存在时，才执行追击逻辑
-        if (target != null && theRB != null)
+        //玩家活着才会执行
+        if (!PlayerController.Instance.isDead)
         {
-            // 1. 计算敌人指向玩家的方向向量（目标位置 - 自身位置）
-            // 2. 归一化方向向量：确保斜向移动和水平/垂直移动速度一致（避免斜向更快）
-            // 3. 设置刚体速度：方向向量 × 移动速度 = 最终移动速度（实现朝向玩家移动）
-            theRB.velocity = (target.position - transform.position).normalized * moveSpeed;
+            // 处理击退逻辑（计时器>0时执行）
+            HandleKnockback();
+
+            // 仅当目标（玩家）和刚体组件都存在时，才执行追击逻辑
+            if (target != null && theRB != null)
+            {
+                // 1. 计算敌人指向玩家的方向向量（目标位置 - 自身位置）
+                // 2. 归一化方向向量：确保斜向移动和水平/垂直移动速度一致（避免斜向更快）
+                // 3. 设置刚体速度：方向向量 × 移动速度 = 最终移动速度（实现朝向玩家移动）
+                theRB.velocity = (target.position - transform.position).normalized * moveSpeed;
+            }
+
+            // 攻击冷却倒计时
+            if (hitCounter > 0f)
+            {
+                hitCounter -= Time.deltaTime;
+            }
         }
-
-        // 攻击冷却倒计时
-        if (hitCounter > 0f)
+        else
         {
-            hitCounter -= Time.deltaTime;
+            //死了直接所有敌人静止
+            theRB.velocity = Vector2.zero;
         }
     }
 

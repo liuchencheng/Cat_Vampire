@@ -33,6 +33,16 @@ public class UIController : MonoBehaviour
     [Tooltip("等级显示文本（如：Level: 3）")]
     public TMP_Text explvlText; // 等级文本UI组件（TextMeshPro）
 
+    /// 存储所有升级选择按钮的数组
+    /// 用于在UI控制器中批量管理多个升级选项按钮（如一次显示3个可选升级）
+    [Tooltip("存储所有升级选择按钮的数组")]
+    public LevelUpSelectionButton[] levelUpButtons;
+
+    /// 升级选择面板的游戏对象
+    /// 用于控制升级界面的显示/隐藏（如玩家升级时显示面板，选择后隐藏）
+    [Tooltip("升级选择面板的游戏对象")]
+    public GameObject levelUpPanel;
+
     void Start()
     {
         // 初始化UI显示（可选：避免初始状态为空）
@@ -68,5 +78,17 @@ public class UIController : MonoBehaviour
         explvlSlider.value = currentExp;
         // 更新等级文本显示（格式：Level: X）
         explvlText.text = $"Level: {currentLvl}" ;
+    }
+
+    /// <summary>
+    /// 跳过升级界面的方法
+    /// 用于玩家不想选择升级时，直接关闭升级面板并恢复游戏运行
+    /// </summary>
+    public void SkipLevelUp()
+    {
+        // 隐藏升级选择面板（将面板的激活状态设为false）
+        levelUpPanel.SetActive(false);
+        // 恢复游戏时间流速（升级时通常会暂停游戏，这里设为1表示正常速度）
+        Time.timeScale = 1f;
     }
 }

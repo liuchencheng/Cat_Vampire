@@ -46,6 +46,9 @@ public class ExperienceLevelController : MonoBehaviour
     [Tooltip("总等级上限，默认50")]
     public int levelCount = 50;
 
+    // 存储武器列表（用于升级面板展示）
+    public List<Weapon> weaponsToUpgrade;
+
     /// <summary>
     /// 游戏启动时初始化升级所需经验列表
     /// </summary>
@@ -114,6 +117,84 @@ public class ExperienceLevelController : MonoBehaviour
         }
 
         //调用武器升级方法
-        PlayerController.Instance.activeWeapon.LevelUp();
+        //PlayerController.Instance.activeWeapon.LevelUp();
+
+        //激活升级面板
+        UIController.Instance.levelUpPanel.SetActive(true);
+
+        //停止时间流动
+        Time.timeScale = 0f;
+
+        // 调用UI控制器中第1个升级按钮的显示更新方法
+        // 传递玩家当前激活的武器（PlayerController单例中的activeWeapon）作为参数
+        // 作用：将当前激活武器的信息同步到升级按钮的UI显示中
+        //UIController.Instance.levelUpButtons[0].UpdateButtonDisplay(PlayerController.Instance.activeWeapon);
+        //UIController.Instance.levelUpButtons[0].UpdateButtonDisplay(PlayerController.Instance.assignedWeapons[0]);
+
+        //固定从未激活武器中抽取两个，加入到升级武器选项中待解锁
+        //UIController.Instance.levelUpButtons[1].UpdateButtonDisplay(PlayerController.Instance.unassignedWeapons[0]);
+        //UIController.Instance.levelUpButtons[2].UpdateButtonDisplay(PlayerController.Instance.unassignedWeapons[1]);
+
+        // 初始化待升级武器列表的逻辑
+        weaponsToUpgrade.Clear(); // 清空当前待升级武器列表
+
+        // 创建“可用武器”临时列表，用于后续随机选择
+        List<Weapon> availableWeapons = new List<Weapon>();
+        // 先把玩家已持有的武器加入可用列表
+        availableWeapons.AddRange(PlayerController.Instance.assignedWeapons);
+
+
+        // 第一步：从已持有的武器中随机选1个加入待升级列表
+        if (availableWeapons.Count > 0)
+        {
+            int selected = Random.Range(0, availableWeapons.Count); // 随机选一个已持有武器的索引
+            weaponsToUpgrade.Add(availableWeapons[selected]); // 加入待升级列表
+            availableWeapons.RemoveAt(selected); // 从可用列表中移除（避免重复选）
+        }
+
+
+        // 第二步：如果玩家持有的武器数量 + 已满级的武器数量 还没到上限，就把未分配的武器加入可用列表
+        if (PlayerController.Instance.assignedWeapons.Count
+            + PlayerController.Instance.fullyLevelledWeapons.Count
+            < PlayerController.Instance.maxWeapons)
+        {
+            availableWeapons.AddRange(PlayerController.Instance.unassignedWeapons);
+        }
+
+
+        // 第三步：补全待升级列表到3个（升级面板通常显示3个选项）
+        for (int i = weaponsToUpgrade.Count; i < 3; i++)
+        {
+            if (availableWeapons.Count > 0) // 确保可用列表还有武器
+            {
+                int selected = Random.Range(0, availableWeapons.Count); // 随机选可用武器的索引
+                weaponsToUpgrade.Add(availableWeapons[selected]); // 加入待升级列表
+                availableWeapons.RemoveAt(selected); // 从可用列表移除
+            }
+        }
+
+
+        // 第四步：更新升级面板的按钮显示（把待升级武器对应到UI按钮）
+        for (int i = 0; i < weaponsToUpgrade.Count; i++)
+        {
+            // 调用UI按钮的UpdateButtonDisplay方法，展示对应武器的信息
+            UIController.Instance.levelUpButtons[i].UpdateButtonDisplay(weaponsToUpgrade[i]);
+        }
+
+
+        // 遍历所有升级按钮（levelUpButtons是升级面板的按钮数组）
+        for (int i = 0; i < UIController.Instance.levelUpButtons.Length; i++)
+        {
+            // 如果当前按钮的索引 < 待升级武器的数量 → 显示该按钮
+            if (i < weaponsToUpgrade.Count)
+            {
+                UIController.Instance.levelUpButtons[i].gameObject.SetActive(true);
+            }
+            // 否则 → 隐藏该按钮
+            else
+            {
+                UIController.Instance.levelUpButtons[i].gameObject.SetActive(false);
+            }
+        }
     }
 }

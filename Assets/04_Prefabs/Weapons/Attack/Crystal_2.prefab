@@ -27,7 +27,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3017870880438468342}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0.3, y: 0, z: 0}
   m_LocalScale: {x: 0.14, y: 0.14, z: 0.14}
   m_ConstrainProportionsScale: 0
@@ -73,8 +73,8 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 1877355739
+  m_SortingLayer: 3
   m_SortingOrder: 0
   m_Sprite: {fileID: 1638438198, guid: 0f2d35081db8b2746aed901899e27f62, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -103,6 +103,9 @@ MonoBehaviour:
   lifeTime: 3
   growSpeed: 1
   shouldKnockBack: 1
+  destroyParent: 0
+  damageOverTime: 0
+  timeBetweenDamage: 0
 --- !u!58 &6153758273967294976
 CircleCollider2D:
   m_ObjectHideFlags: 0

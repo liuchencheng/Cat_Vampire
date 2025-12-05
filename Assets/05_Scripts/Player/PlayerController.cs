@@ -35,8 +35,31 @@ public class PlayerController : MonoBehaviour
     /// 激活的武器
     /// 用于指向玩家当前正在使用的武器实例，方便访问其属性和调用方法
     /// </summary>
-    [Header("激活的武器")]
-    public Weapon activeWeapon;
+    //[Header("激活的武器")]
+    //public Weapon activeWeapon;
+
+    // 未分配的武器列表
+    [Header("未分配的武器列表")]
+    public List<Weapon> unassignedWeapons;
+    // 已分配的武器列表
+    [Header("已分配的武器列表")]
+    public List<Weapon> assignedWeapons;
+
+    // 玩家可持有的最大武器数量
+    [Header("玩家可持有的最大武器数量")]
+    public int maxWeapons = 3;
+
+    // [HideInInspector]：让该字段不在Unity Inspector面板中显示（避免手动修改）
+    // 存储所有已经升到满级的武器
+    // 初始化一个空的Weapon列表，避免后续为null
+    [HideInInspector]
+    public List<Weapon> fullyLevelledWeapons = new List<Weapon>();
+
+    void Start()
+    {
+        // 随机从unassignedWeapons中选一个武器添加
+        AddWeapon(Random.Range(0, unassignedWeapons.Count));
+    }
 
     void Update()
     {
@@ -88,5 +111,31 @@ public class PlayerController : MonoBehaviour
     public void SetDead()
     {
         isDead = true;
+    }
+
+    //添加武器
+    public void AddWeapon(int weaponNumber)
+    {
+        // 先判断索引是否在unassignedWeapons的有效范围内
+        if (weaponNumber < unassignedWeapons.Count)
+        {
+            // 将该武器添加到已分配列表
+            assignedWeapons.Add(unassignedWeapons[weaponNumber]);
+            // 激活该武器对应的游戏对象
+            unassignedWeapons[weaponNumber].gameObject.SetActive(true);
+            // 从未分配列表中移除该武器
+            unassignedWeapons.RemoveAt(weaponNumber);
+        }
+    }
+
+    // 添加武器的方法，参数为要添加的武器对象
+    public void AddWeapon(Weapon weaponToAdd)
+    {
+        // 激活该武器对应的游戏对象
+        weaponToAdd.gameObject.SetActive(true);
+        // 将武器添加到已分配列表
+        assignedWeapons.Add(weaponToAdd);
+        // 从未分配列表中移除该武器
+        unassignedWeapons.Remove(weaponToAdd);
     }
 }
