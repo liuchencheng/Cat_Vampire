@@ -59,6 +59,13 @@ public class PlayerController : MonoBehaviour
     {
         // 随机从unassignedWeapons中选一个武器添加
         AddWeapon(Random.Range(0, unassignedWeapons.Count));
+
+        // 初始化玩家移动速度为“移动速度属性的0级数值”
+        moveSpeed = PlayerStatController.Instance.moveSpeed[0].value;
+        // 初始化玩家拾取范围为“拾取范围属性的0级数值”
+        pickupRange = PlayerStatController.Instance.pickupRange[0].value;
+        // 初始化玩家最大武器数为“最大武器数属性的0级数值（取整）”
+        maxWeapons = Mathf.RoundToInt(PlayerStatController.Instance.maxWeapons[0].value);
     }
 
     void Update()

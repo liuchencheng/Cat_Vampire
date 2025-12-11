@@ -82,6 +82,9 @@ public class ExperienceLevelController : MonoBehaviour
         //更新玩家的经验条
         //当前拥有的经验值、当前等级升级所需的总经验值、当前玩家等级
         UIController.Instance.UpdateExperience(currentExperience, expLevels[currentLevel], currentLevel);
+
+        //拾取经验的音效
+        SFXManager.Instance.PlaySFXPitched(2);
     }
 
 
@@ -103,6 +106,9 @@ public class ExperienceLevelController : MonoBehaviour
     /// </summary>
     void LevelUp()
     {
+        //玩家血量高于0才会升级
+        if (PlayerHealthController.Instance.currentHealth <= 0) return;
+
         // 扣除当前等级升级所需的经验（多余的经验会保留，用于下次升级）
         currentExperience -= expLevels[currentLevel];
 
@@ -196,5 +202,9 @@ public class ExperienceLevelController : MonoBehaviour
                 UIController.Instance.levelUpButtons[i].gameObject.SetActive(false);
             }
         }
+
+        // 调用玩家属性控制器的UpdateDisplay方法，同步更新所有属性升级面板的UI内容
+        // （一般在属性升级成功、游戏初始化、金币变化后调用，确保UI显示最新状态）
+        PlayerStatController.Instance.UpdateDisplay();
     }
 }

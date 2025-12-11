@@ -34,6 +34,13 @@ public class EnemyController : MonoBehaviour
     [Header("该敌人提供的经验值")]
     public int expToGive = 1;
 
+    // 金币的单枚价值（比如1个金币代表1点货币）
+    [Tooltip("金币的单枚价值")]
+    public int coinValue = 1;
+    // 金币掉落概率（0~1之间，比如0.5代表50%概率掉落）
+    [Tooltip("金币掉落概率")]
+    public float coinDropRate = .5f;
+
     /// <summary>
     /// 游戏启动时执行一次
     /// 作用：获取玩家的Transform引用，作为敌人的追击目标
@@ -115,6 +122,21 @@ public class EnemyController : MonoBehaviour
             // 参数1：经验值生成位置（当前敌人的世界坐标）
             // 参数2：要生成的经验值（使用上面配置的expToGive）
             ExperienceLevelController.Instance.SpawnExp(transform.position, expToGive);
+
+            // 判断是否触发金币掉落：Random.value会生成0~1之间的随机数
+            if (Random.value <= coinDropRate)
+            {
+                // 调用CoinController的单例方法，在当前物体位置生成对应价值的金币
+                CoinController.Instance.DropCoin(transform.position, coinValue);
+            }
+
+            //如果敌人死了，播放0号死亡的声音
+            SFXManager.Instance.PlaySFXPitched(0);
+        }
+        else
+        {
+            //如果敌人死了，播放1号受伤的声音
+            SFXManager.Instance.PlaySFXPitched(1);
         }
 
         // 调用伤害数字控制器的单例实例，生成伤害数字

@@ -45,9 +45,15 @@ public class PlayerHealthController : MonoBehaviour
     // 存储 Canvas 正常的、未被拉伸的本地缩放值，防止血条被拉伸的特别长
     private Vector3 initialCanvasScale;
 
+    // 玩家死亡特效的预制体
+    [Header("玩家死亡特效的预制体")]
+    public GameObject deathEffect;
 
     void Start()
     {
+        // 初始化玩家最大生命值为“生命值属性的0级数值”
+        maxHealth = PlayerStatController.Instance.health[0].value;
+
         currentHealth = maxHealth; // 开局血量拉满
         // 获取当前对象上的PlayerController组件（前提：两个脚本挂在同一个玩家对象上）
         playerController = GetComponent<PlayerController>();
@@ -119,6 +125,16 @@ public class PlayerHealthController : MonoBehaviour
         if (currentHealth <= 0)
         {
             Die();
+
+            //倒计时结束
+            LevelManager.Instance.EndLevel();
+
+            // 在指定位置（当前物体的位置）生成死亡特效
+            // 参数说明：
+            // - deathEffect：要生成的特效预制体
+            // - transform.position：特效生成的位置（与当前物体位置一致）
+            // - transform.rotation：特效生成的旋转角度（与当前物体旋转一致）
+            Instantiate(deathEffect, transform.position, transform.rotation);
         }
     }
 

@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 /// <summary>
@@ -43,6 +44,44 @@ public class UIController : MonoBehaviour
     [Tooltip("升级选择面板的游戏对象")]
     public GameObject levelUpPanel;
 
+    // 拖入UGUI的CoinText文本组件（用于显示金币数量）
+    [Tooltip("拖入UGUI的CoinText文本组件")]
+    public TMP_Text coinText;
+
+    // 引用玩家属性对应的“升级UI显示组件”
+    [Tooltip("移动速度升级UI")]
+    public PlayerStatUpgradeDisplay moveSpeedUpgradeDisplay;   // 移动速度升级UI
+    [Tooltip("生命值升级UI")]
+    public PlayerStatUpgradeDisplay healthUpgradeDisplay;      // 生命值升级UI
+    [Tooltip("拾取范围升级UI")]
+    public PlayerStatUpgradeDisplay pickupRangeUpgradeDisplay; // 拾取范围升级UI
+    [Tooltip("最大武器数升级UI")]
+    public PlayerStatUpgradeDisplay maxWeaponsUpgradeDisplay;  // 最大武器数升级UI
+
+    // 显示时间的Time Text文本组件
+    public TMP_Text timeText;
+
+    // 拖入关卡结束UI界面
+    [Tooltip("拖入关卡结束UI界面")]
+    public GameObject levelEndScreen;
+    // 显示被什么打死的文本组件
+    [Tooltip("显示被什么打死的文本组件")]
+    public TMP_Text endText;
+    // 显示"你死了"的文本组件
+    [Tooltip("显示\"你死了\"的文本组件")]
+    public TMP_Text titleText;
+    // 显示"你赢了"的文本组件
+    [Tooltip("显示\"你赢了\"的文本组件")]
+    public TMP_Text survivedText;
+
+    [Tooltip("主菜单名字")]
+    public string mainMenuName;
+
+    // 暂停界面的UI界面
+    [Tooltip("暂停界面的UI界面")]
+    public GameObject pauseScreen;
+    
+
     void Start()
     {
         // 初始化UI显示（可选：避免初始状态为空）
@@ -54,7 +93,11 @@ public class UIController : MonoBehaviour
 
     void Update()
     {
-        
+        // 监听“ESC键”按下事件，触发暂停/取消暂停逻辑
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            PauseUnpause();
+        }
     }
 
     /// <summary>
@@ -90,5 +133,130 @@ public class UIController : MonoBehaviour
         levelUpPanel.SetActive(false);
         // 恢复游戏时间流速（升级时通常会暂停游戏，这里设为1表示正常速度）
         Time.timeScale = 1f;
+    }
+
+    /// <summary>
+    /// 更新UI上的金币显示文本
+    /// </summary>
+    public void UpdateCoins()
+    {
+        // 将文本内容设置为 "Coins: 当前金币数"
+        // 从CoinController单例中获取当前金币数量（currentCoins）并显示
+        coinText.text = $"金币：{CoinController.Instance.currentCoins}";
+    }
+
+    /// <summary>
+    /// 购买（升级）移动速度的按钮点击回调
+    /// </summary>
+    public void PurchaseMoveSpeed()
+    {
+        // 调用玩家属性控制器中对应的移动速度升级方法（实际升级逻辑在PlayerStatController中）
+        PlayerStatController.Instance.PurchaseMoveSpeed();
+        // 升级后关闭升级面板
+        SkipLevelUp();
+    }
+
+
+    /// <summary>
+    /// 购买（升级）生命值的按钮点击回调
+    /// </summary>
+    public void PurchaseHealth()
+    {
+        // 调用玩家属性控制器中对应的生命值升级方法
+        PlayerStatController.Instance.PurchaseHealth();
+        // 升级后关闭升级面板
+        SkipLevelUp();
+    }
+
+
+    /// <summary>
+    /// 购买（升级）拾取范围的按钮点击回调
+    /// </summary>
+    public void PurchasePickupRange()
+    {
+        // 调用玩家属性控制器中对应的拾取范围升级方法
+        PlayerStatController.Instance.PurchasePickupRange();
+        // 升级后关闭升级面板
+        SkipLevelUp();
+    }
+
+
+    /// <summary>
+    /// 购买（升级）最大武器数的按钮点击回调
+    /// </summary>
+    public void PurchaseMaxWeapons()
+    {
+        // 调用玩家属性控制器中对应的最大武器数升级方法
+        PlayerStatController.Instance.PurchaseMaxWeapons();
+        // 升级后关闭升级面板
+        SkipLevelUp();
+    }
+
+    /// <summary>
+    /// 精准倒计时UI显示（接收剩余时间，格式：Time: 分:秒，秒数补0）
+    /// </summary>
+    /// <param name="remainingTime">剩余倒计时时间（单位：秒）</param>
+    public void UpdateTimer(float remainingTime)
+    {
+        // 取整处理：避免小数导致的秒数“快速跳变”（核心优化）
+        int totalSeconds = Mathf.FloorToInt(Mathf.Max(remainingTime, 0f)); //转为整数秒
+
+        // 更新UI：秒数不足2位补0（如3秒→03），避免显示“1:5”而是“1:05”
+        timeText.text = $"未知倒计时: {totalSeconds / 60}:{((int)(totalSeconds % 60)).ToString("00")}";
+    }
+
+    /// <summary>
+    /// 跳转到主菜单场景的方法（点击“主菜单”按钮时调用）
+    /// </summary>
+    public void GoToMainMenu()
+    {
+        // 加载主菜单场景
+        SceneManager.LoadScene(mainMenuName);
+        Time.timeScale = 1f;
+    }
+
+
+    /// <summary>
+    /// 重新开始当前关卡的方法
+    /// </summary>
+    public void Restart()
+    {
+        // 加载“当前活跃的场景”（即重新加载当前关卡）
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        Time.timeScale = 1f;
+    }
+
+    /// <summary>
+    /// 退出游戏的方法（通常在暂停界面的“退出”按钮调用）
+    /// </summary>
+    public void QuitGame()
+    {
+        // 关闭应用程序（仅在打包后生效，Editor模式下无反应）
+        Application.Quit();
+    }
+
+
+    /// <summary>
+    /// 暂停/取消暂停的切换逻辑
+    /// </summary>
+    public void PauseUnpause()
+    {
+        // 若暂停界面当前是隐藏状态 → 开启暂停
+        if (pauseScreen.activeSelf == false)
+        {
+            pauseScreen.SetActive(true); // 显示暂停界面
+            Time.timeScale = 0f; // 时间缩放设为0，暂停游戏逻辑（动画、移动等）
+        }
+        // 若暂停界面当前是显示状态 → 取消暂停
+        else
+        {
+            pauseScreen.SetActive(false); // 隐藏暂停界面
+
+            // 额外判断：若升级面板也处于隐藏状态，才恢复时间缩放
+            if (levelUpPanel.activeSelf == false)
+            {
+                Time.timeScale = 1f; // 时间缩放设为1，恢复正常游戏速度
+            }
+        }
     }
 }
