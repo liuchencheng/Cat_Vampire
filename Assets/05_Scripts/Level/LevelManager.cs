@@ -29,7 +29,27 @@ public class LevelManager : MonoBehaviour
     public float timer;
 
     // 显示关卡结束界面的延迟时间
+    [Tooltip("显示关卡结束界面的延迟时间")]
     public float waitToShowEndScreen = 1f;
+
+    // 新增：用于确保 Boss Panel 渐变只触发一次的标记
+    private bool bossPanelFadedIn = false;
+
+    // LevelManager脚本中新增：
+    [Tooltip("Boss预制体")]
+    public GameObject bossPrefab;
+    //boss血量
+    public float bossPanelState;
+
+    // 拖入 BGM 对象上的 AudioSource 组件
+    [Tooltip("拖入 BGM")]
+    public AudioSource bgmSource;
+    // 拖入关卡结束音乐 AudioClip
+    [Tooltip("拖入关卡结束音乐")]
+    public AudioSource levelEndBGM;
+
+    // 关卡结束标记（关键！防止EndLevel2重复执行）
+    private bool isLevel2Ended = false;
 
     void Start()
     {
@@ -44,17 +64,54 @@ public class LevelManager : MonoBehaviour
         if (gameActive == true)
         {
             // 累加当前帧与上一帧的时间差，更新总时长
-            if(timer > 0)
+            if (timer > 0)
             {
                 timer -= Time.deltaTime;
+                // 调用UI控制器的方法，同步更新计时器显示
+                UIController.Instance.UpdateTimer(timer);
             }
             else
             {
                 timer = 0;
-            }
 
-            // 调用UI控制器的方法，同步更新计时器显示
-            UIController.Instance.UpdateTimer(timer);
+                // 【核心逻辑】倒计时归零且未触发 Boss 出现时
+                if (!bossPanelFadedIn)
+                {
+                    // 通过 UIController 单例调用 Boss Panel 的渐变方法（从明到暗）
+                    if (UIController.Instance != null)
+                    {
+                        // 传入“是否冻结主游戏”的标记（这里设为true）
+                        UIController.Instance.StartBossPanelFadeIn(true);
+                    }
+
+                    // 标记为已触发，防止重复调用
+                    bossPanelFadedIn = true;
+                    // 冻结主游戏逻辑（玩家、怪物、物理等停止）
+                    gameActive = false;
+                    // 关键：设置时间缩放为0，冻结基于Time.deltaTime的逻辑（如移动、动画）
+                    Time.timeScale = 0f;
+                }
+
+                // 倒计时结束后，激活Boss
+                SpawnBoss(true);
+            }
+        }
+
+        // 玩家生命值大于0，并且当前倒计时小于等于0，才会触发boss血量检查
+        if (timer <= 0 && PlayerHealthController.Instance.currentHealth > 0 && !isLevel2Ended)
+        {
+            // 读取Boss的当前血量，赋值给LevelManager的bossPanelState
+            bossPanelState = bossPrefab.GetComponent<EnemyController>().health;
+
+            //由于BOSS血量清零就会被删除，所以干脆在原有血量上+100
+            //这里的判定也改为小于100就不激活BOSS
+            if (bossPanelState <= 100)
+            {
+                //不激活boss
+                SpawnBoss(false);
+
+                EndLevel2();
+            }
         }
     }
 
@@ -82,12 +139,53 @@ public class LevelManager : MonoBehaviour
         UIController.Instance.survivedText.text = null;
 
         //如果倒计时不等于0
-        if (timer != 0) UIController.Instance.endText.text = "死于怪物群殴……";
+        if (timer != 0) UIController.Instance.endText.text = "死于怪物群中……";
 
-        else UIController.Instance.endText.text = "死于神秘修仙者之手……";
+        else UIController.Instance.endText.text = "死于神秘帝国士兵之手……";
 
         // 激活UI控制器中的“关卡结束界面”（显示结算面板）
         UIController.Instance.levelEndScreen.SetActive(true);
     }
 
+    /// <summary>
+    /// 结束关卡的入口方法
+    /// </summary>
+    public void EndLevel2()
+    {
+        // 标记关卡已结束，防止重复调用
+        isLevel2Ended = true;
+
+        gameActive = false; // 标记游戏停止活跃（暂停计时、停止游戏逻辑）
+
+        // 1. 停止当前的 BGM
+        if (bgmSource != null)
+        {
+            bgmSource.Stop();
+        }
+
+        // 2. 用音频设备绝对时间+0.2秒延迟播放（给音频系统缓冲时间）
+        if (levelEndBGM != null && levelEndBGM.clip != null)
+        {
+            // 播放音频
+            levelEndBGM.Play();
+        }
+
+        //把“你死了”去除
+        UIController.Instance.titleText.text = null;
+
+        // 激活UI控制器中的“关卡结束界面”（显示结算面板）
+        UIController.Instance.levelEndScreen.SetActive(true);
+
+        // 暂停游戏时间
+        Time.timeScale = 0f;
+    }
+
+
+
+    // 激活Boss的方法
+    private void SpawnBoss(bool activate)
+    {
+        if (activate) bossPrefab.SetActive(true);// 激活场景中已存在的Boss
+        else bossPrefab.SetActive(false); //否则则关闭已激活的boss
+    }
 }

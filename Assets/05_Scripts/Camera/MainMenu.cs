@@ -18,6 +18,9 @@ public class MainMenu : MonoBehaviour
     {
         // 加载指定名称的场景（即进入第一个关卡）
         SceneManager.LoadScene(firstLevelName);
+
+        //打死BOSS的时候会暂停时间，这里是为了防止时间暂停
+        Time.timeScale = 1f;
     }
 
 

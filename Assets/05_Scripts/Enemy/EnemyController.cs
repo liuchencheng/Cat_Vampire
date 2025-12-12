@@ -135,7 +135,7 @@ public class EnemyController : MonoBehaviour
         }
         else
         {
-            //如果敌人死了，播放1号受伤的声音
+            //如果敌人没死，播放1号受伤的声音
             SFXManager.Instance.PlaySFXPitched(1);
         }
 

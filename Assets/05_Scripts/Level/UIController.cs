@@ -26,6 +26,14 @@ public class UIController : MonoBehaviour
         {
             Destroy(gameObject); // 重复实例直接销毁
         }
+
+        // 无论从哪个场景加载过来，都确保游戏时间是正常的
+        // 这一步能有效解决 Time.timeScale=0f 带来的跨场景停顿问题
+        //主要是为了解决打死boss之后，回溯时间，时间依然暂停的问题
+        if (Time.timeScale != 1f)
+        {
+            Time.timeScale = 1f;
+        }
     }
 
     [Tooltip("经验条滑块（显示当前等级的经验进度）")]
@@ -80,10 +88,167 @@ public class UIController : MonoBehaviour
     // 暂停界面的UI界面
     [Tooltip("暂停界面的UI界面")]
     public GameObject pauseScreen;
-    
+
+
+    // Boss出场的UI（Image组件，用于渐变）
+    [Tooltip("Boss出场的bossPanel的UI")]
+    public Image bossPanel;
+    [Tooltip("渐变持续时间 (单位: 秒) ")]
+    public float fadeDuration = 1f;
+
+    // 新增：Boss Panel对应的文本组件（红框中的TextMeshPro）
+    [Tooltip("Boss Panel中的剧情文本组件")]
+    public TMP_Text bossPanelText;
+    // 新增：文本逐行显示的间隔时间（单位：秒）
+    [Tooltip("文本逐行显示的间隔时间")]
+    public float textLineInterval = 1f;
+    // 新增：剧情文本内容（按第二张图的结构拆分）
+    private string[] bossPlotTexts = new string[] {
+    "等等，这是什么？",
+    "奇怪，这颗连大气都没有的星球上，怎么可能会存在猫？",
+    "操！",
+    "该死！该死！",
+    "是虫子！",
+    "凯文，这TMD的根本不是猫！",
+    "是伪装成猫的虫族！它正在疯狂发育进化！",
+    "快快快，快上报！",
+    "不，来不及了…它进化的太快了。",
+    "凯文，帮我转告弗丽娜，我爱她。",
+    "……",
+    "一切为了帝国！"
+    };
+    // 新增：Boss Panel中的“Main Menu”按钮（红框中的Button）
+    [Tooltip("Boss Panel中的确认按钮Boss Confirm Button")]
+    public Button bossConfirmButton;
+    [Tooltip("Boss Confirm Button按钮上的TextMeshPro文本组件")]
+    public TMP_Text bossButtonText; // 关键：新增按钮文本组件引用
+
+
+    // --- 倒计时结束调用：从透明淡入，同时冻结主游戏 ---
+    /// <param name="freezeMainGame">是否冻结主游戏逻辑</param>
+    public void StartBossPanelFadeIn(bool freezeMainGame)
+    {
+        if (bossPanel != null)
+        {
+            bossPanel.gameObject.SetActive(true);
+            StartCoroutine(FadeInCoroutine(freezeMainGame));
+        }
+    }
+
+    IEnumerator FadeInCoroutine(bool freezeMainGame)
+    {
+        float timer = 0f;
+        Color currentColor = bossPanel.color;
+
+        // 起始点：完全透明 (A=0)
+        currentColor.a = 0f;
+        bossPanel.color = currentColor;
+
+        // 目标点：完全不透明 (A=1)
+        Color targetColor = currentColor;
+        targetColor.a = 1f;
+
+        // 渐变过程（用Time.unscaledDeltaTime，不受时间缩放影响）
+        while (timer < fadeDuration)
+        {
+            float progress = timer / fadeDuration;
+            float newAlpha = Mathf.Lerp(0f, 1f, progress);
+            bossPanel.color = new Color(currentColor.r, currentColor.g, currentColor.b, newAlpha);
+
+            // 关键：用unscaledDeltaTime，确保淡入不受Time.timeScale=0影响
+            timer += Time.unscaledDeltaTime;
+            yield return null;
+        }
+
+        // 确保Boss Panel最终完全不透明
+        bossPanel.color = targetColor;
+
+        // 【新增】Boss Panel淡入完成后，开始逐行显示文本
+        StartCoroutine(ShowPlotTextLineByLine());
+    }
+
+    /// <summary>
+    /// 逐行显示剧情文本，每行淡入呈现
+    /// </summary>
+    IEnumerator ShowPlotTextLineByLine()
+    {
+        // 先隐藏按钮（初始状态）
+        bossConfirmButton.gameObject.SetActive(false);
+        if (bossButtonText != null)
+        {
+            bossButtonText.text = ""; // 清空按钮文字
+        }
+
+        // 先清空文本，设置初始透明度为0（完全透明）
+        bossPanelText.text = "";
+        Color textColor = bossPanelText.color;
+        textColor.a = 0f;
+        bossPanelText.color = textColor;
+        //清除倒计时文本
+        timeText.text = "";
+
+        // 逐行处理文本
+        foreach (string line in bossPlotTexts)
+        {
+            // 追加当前行到文本（换行分隔）
+            bossPanelText.text += (bossPanelText.text == "" ? "" : "\n") + line;
+
+            // 对当前行执行“从透明到不透明”的淡入
+            float fadeTimer = 0f;
+            while (fadeTimer < 0.5f) // 单行文本次淡入时间（0.5秒）
+            {
+                float progress = fadeTimer / 0.5f;
+                textColor.a = Mathf.Lerp(0f, 1f, progress);
+                bossPanelText.color = textColor;
+
+                fadeTimer += Time.unscaledDeltaTime;
+                yield return null;
+            }
+            textColor.a = 1f;
+            bossPanelText.color = textColor;
+
+            // 每行显示后等待指定间隔
+            yield return new WaitForSecondsRealtime(textLineInterval);
+        }
+
+        // 文本全部显示后：激活按钮 + 赋予按钮文字“点此继续……”
+        bossConfirmButton.gameObject.SetActive(true);
+        if (bossButtonText != null)
+        {
+            bossButtonText.text = "点此继续……"; // 呈现时才赋予文字
+        }
+        // 给按钮绑定点击事件（避免重复绑定）
+        bossConfirmButton.onClick.RemoveAllListeners();
+        bossConfirmButton.onClick.AddListener(OnBossConfirmButtonClick);
+    }
+
+    /// <summary>
+    /// 按钮点击事件：关闭Boss Panel，恢复主场景
+    /// </summary>
+    private void OnBossConfirmButtonClick()
+    {
+        // 隐藏Boss Panel和按钮
+        bossPanel.gameObject.SetActive(false);
+        bossConfirmButton.gameObject.SetActive(false);
+
+        // 清空按钮文字（下次显示时重新赋予）
+        if (bossButtonText != null)
+        {
+            bossButtonText.text = "";
+        }
+
+        // 恢复主场景时间缩放和游戏逻辑
+        Time.timeScale = 1f;
+    }
 
     void Start()
     {
+        // 初始化：确保按钮文字为空（双重保险）
+        if (bossButtonText != null)
+        {
+            bossButtonText.text = "";
+        }
+
         // 初始化UI显示（可选：避免初始状态为空）
         if (explvlText != null)
         {
